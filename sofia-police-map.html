@@ -238,7 +238,7 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Полицейски управления в София с пълна информация
+        // Полицейски управления в София с пълна информация и обслужвани райони
         const policeStations = [
             {
                 name: "01 РУ - СДВР",
@@ -246,7 +246,8 @@
                 lon: 23.35897604635238,
                 address: "гр. София, п. код 1113, ж. к. \"Гео Милев\", бул. \"Шипченски проход\" № 8",
                 phones: "02/982 7166; 02/982 7167",
-                territory: "Обслужваната територия обхваща три административни столични района: Средец, Слатина и Изгрев."
+                territory: "Обслужваната територия обхваща три административни столични района: Средец, Слатина и Изгрев.",
+                districts: ["Sredec", "Slatina", "Izgrev", "Средец", "Слатина", "Изгрев"]
             },
             {
                 name: "02 РУ - СДВР",
@@ -254,7 +255,8 @@
                 lon: 23.32142258387964,
                 address: "гр. София, п. код 1202, ул. \"Княз Борис І\" № 215",
                 phones: "02/982 0820; 02/831 0107",
-                territory: "Обслужваната територия обхваща три административни столични района: Сердика, Надежда и Нови Искър."
+                territory: "Обслужваната територия обхваща три административни столични района: Сердика, Надежда и Нови Искър.",
+                districts: ["Serdika", "Nadejda", "Novi Iskar", "Сердика", "Надежда", "Нови Искър", "Nadezhda"]
             },
             {
                 name: "03 РУ - СДВР",
@@ -262,7 +264,8 @@
                 lon: 23.296368084117372,
                 address: "гр. София, п. код 1309, ж. к. \"Илинден\", ул. \"Индже Войвода\" № 2",
                 phones: "02/982 1260; 02/982 1290; 02/822 1875",
-                territory: "Обслужваната територия обхваща три административни столични района: Възраждане, Красна поляна и Илинден."
+                territory: "Обслужваната територия обхваща три административни столични района: Възраждане, Красна поляна и Илинден.",
+                districts: ["Vazrajdane", "Krasna poliana", "Ilinden", "Възраждане", "Красна поляна", "Илинден"]
             },
             {
                 name: "04 РУ - СДВР",
@@ -270,7 +273,8 @@
                 lon: 23.325799492311525,
                 address: "гр. София, п. код 1421, ж. к. \"Лозенец\", ул. \"Крум Попов\" № 57",
                 phones: "02/982 4160; 02/982 3146; 02/866 2227",
-                territory: "Обслужваната територия обхваща два административни столични района - Триадица и Лозенец."
+                territory: "Обслужваната територия обхваща два административни столични района - Триадица и Лозенец.",
+                districts: ["Triadica", "Lozenets", "Триадица", "Лозенец"]
             },
             {
                 name: "05 РУ - СДВР",
@@ -278,7 +282,8 @@
                 lon: 23.340880091012394,
                 address: "гр. София, п. код 1504, ул. \"Марин Дринов\" № 4",
                 phones: "02/982 5920; 02/982 5921",
-                territory: "Обслужваната територия обхваща три административни столични района: Оборище, Подуяне и Кремиковци, както и селата Яна, Желява, Долни Богров, Горни Богров и гр. Бухово."
+                territory: "Обслужваната територия обхваща три административни столични района: Оборище, Подуяне и Кремиковци, както и селата Яна, Желява, Долни Богров, Горни Богров и гр. Бухово.",
+                districts: ["Oborishte", "Poduyane", "Kremikovci", "Оборище", "Подуяне", "Кремиковци"]
             },
             {
                 name: "06 РУ - СДВР",
@@ -286,7 +291,8 @@
                 lon: 23.279882470008868,
                 address: "гр. София, п. код 1618, ж. к. \"Красно село\", бул. \"Братя Бъкстон\" № 5",
                 phones: "02/982 1760; 02/982 1761; 02/856 2914",
-                territory: "Обслужваната територия обхваща три административни столични района: Красно село, Овча купел и Витоша, както и селата: Владая, Мърчаево и Мало Бучино."
+                territory: "Обслужваната територия обхваща три административни столични района: Красно село, Овча купел и Витоша, както и селата: Владая, Мърчаево и Мало Бучино.",
+                districts: ["Krasno selo", "Ovcha kupel", "Vitosha", "Красно село", "Овча купел", "Витоша"]
             },
             {
                 name: "07 РУ - СДВР",
@@ -294,7 +300,8 @@
                 lon: 23.367732948266692,
                 address: "гр. София, п. код 1700, ж. к. \"Младост\", бул. \"Александър Малинов\" № 1",
                 phones: "02/982 8760; 02/862 6108",
-                territory: "Обслужваната територия обхваща два административни столични района: \"Младост\" и \"Студентски\"."
+                territory: "Обслужваната територия обхваща два административни столични района: \"Младост\" и \"Студентски\".",
+                districts: ["Mladost", "Studentski", "Младост", "Студентски"]
             },
             {
                 name: "08 РУ - СДВР",
@@ -302,7 +309,8 @@
                 lon: 23.399016959948565,
                 address: "гр. София, п. код 1592, ж. к. \"Дружба\", ул. \"Иван Арабаджията\" № 141",
                 phones: "02/982 5310; 02/982 7310; 02/979 0786",
-                territory: "Обслужваната територия обхваща кварталите Дружба, Цариградски комплекс, Абдовица, Димитър Миленков и Бусманци, десет села: Панчарево, Кокаляне, Пасарел, Лозен, Герман, Казичане, Кривина, Бистрица, Железница и Плана и 53 вилни зони."
+                territory: "Обслужваната територия обхваща кварталите Дружба, Цариградски комплекс, Абдовица, Димитър Миленков и Бусманци, десет села: Панчарево, Кокаляне, Пасарел, Лозен, Герман, Казичане, Кривина, Бистрица, Железница и Плана и 53 вилни зони.",
+                districts: ["Pancharevo", "Панчарево", "Pancherevo", "Iskar", "Искър", "Дружба", "Drujba", "Dружба", "Druzhba"]
             },
             {
                 name: "09 РУ - СДВР",
@@ -310,7 +318,8 @@
                 lon: 23.239486778838344,
                 address: "гр. София, п. код 1359, ж. к. \"Люлин ІV\" бл. 464, вх. В",
                 phones: "02/982 5600; 02/982 5601; 02/824 3655",
-                territory: "Обслужваната територия обхваща три административни столични района: Люлин, Връбница и Банкя."
+                territory: "Обслужваната територия обхваща три административни stolични района: Люлин, Връбница и Банкя.",
+                districts: ["Liulin", "Vrabnitsa", "Bankia", "Люлин", "Връбница", "Банкя"]
             }
         ];
 
@@ -363,7 +372,40 @@
             return distance;
         }
 
-        // Функция за намиране на най-близкото полицейско управление
+        // Функция за намиране на полицейското управление по район
+        function findPoliceStationByDistrict(districtName) {
+            if (!districtName) return null;
+            
+            const normalizedDistrict = districtName.toLowerCase().trim();
+            
+            // Премахване на общи думи
+            const cleanedDistrict = normalizedDistrict
+                .replace(/район\s*/gi, '')
+                .replace(/municipality\s*/gi, '')
+                .replace(/кв\.\s*/gi, '')
+                .replace(/ж\.к\.\s*/gi, '')
+                .replace(/district\s*/gi, '')
+                .trim();
+            
+            console.log('Търсене на РУ за район:', cleanedDistrict);
+            
+            for (const station of policeStations) {
+                for (const district of station.districts) {
+                    const normalizedStationDistrict = district.toLowerCase().trim();
+                    
+                    // Само точно съвпадение - премахваме includes логиката
+                    if (cleanedDistrict === normalizedStationDistrict) {
+                        console.log('Намерено точно съвпадение:', district, '→', station.name);
+                        return station;
+                    }
+                }
+            }
+            
+            console.log('Няма точно съвпадение за:', cleanedDistrict);
+            return null;
+        }
+
+        // Функция за намиране на най-близкото полицейско управление (резервен метод)
         function findNearestPoliceStation(lat, lon) {
             let nearest = null;
             let minDistance = Infinity;
@@ -378,12 +420,75 @@
 
             return { station: nearest, distance: minDistance };
         }
+        
+        // Функция за получаване на информация за района чрез Overpass API
+        async function getDistrictInfo(lat, lon) {
+            // Използваме Overpass API за да намерим в коя административна граница (relation) се намира точката
+            const overpassUrl = 'https://overpass-api.de/api/interpreter';
+            
+            // Overpass query за намиране на Sofia districts (admin_level=6)
+            const query = `[out:json][timeout:25];
+is_in(${lat},${lon})->.a;
+relation(pivot.a)["boundary"="administrative"]["admin_level"="6"];
+out tags;`;
+            
+            try {
+                console.log('Изпращане на Overpass заявка за:', lat, lon);
+                
+                const response = await fetch(overpassUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: 'data=' + encodeURIComponent(query)
+                });
+                
+                if (!response.ok) {
+                    console.error('Overpass API грешка:', response.status, response.statusText);
+                    return { districts: [], fullAddress: null };
+                }
+                
+                const data = await response.json();
+                console.log('Overpass API пълен резултат:', JSON.stringify(data, null, 2));
+                
+                const districts = [];
+                if (data.elements && data.elements.length > 0) {
+                    for (const element of data.elements) {
+                        const tags = element.tags || {};
+                        console.log('Element ID:', element.id, 'tags:', tags);
+                        
+                        // Вземаме имената на български, английски и name:suffix:en
+                        const nameBg = tags['name:bg'];
+                        const nameEn = tags['name:en'];
+                        const name = tags['name'];
+                        const suffixEn = tags['name:suffix:en'];
+                        
+                        // Добавяме всички налични имена
+                        if (nameBg) districts.push(nameBg);
+                        if (nameEn) districts.push(nameEn);
+                        if (name && name !== nameBg && name !== nameEn) districts.push(name);
+                        
+                        console.log('District names:', { nameBg, nameEn, name, suffixEn });
+                    }
+                }
+                
+                console.log('Извлечени райони от Overpass:', districts);
+                
+                return {
+                    districts: districts,
+                    fullAddress: null
+                };
+            } catch (error) {
+                console.error('Грешка при Overpass API:', error);
+                return { districts: [], fullAddress: null };
+            }
+        }
 
         // Променлива за маркер на кликнатото/търсено място
         let clickMarker = null;
 
         // Функция за показване на резултата
-        function showResult(lat, lon, source = 'click') {
+        async function showResult(lat, lon, source = 'click') {
             // Премахване на предишния маркер
             if (clickMarker) {
                 map.removeLayer(clickMarker);
@@ -406,11 +511,43 @@
             // Центриране на картата
             map.setView([lat, lon], 14);
 
-            // Намиране на най-близкото РУ
-            const result = findNearestPoliceStation(lat, lon);
-            const distance = result.distance;
-            const station = result.station;
+            // Показване на loading съобщение
+            document.getElementById('resultContent').innerHTML = '<p>Зареждане...</p>';
+            document.getElementById('resultBox').classList.add('show');
 
+            // Получаване на информация за района
+            const districtInfo = await getDistrictInfo(lat, lon);
+            let station = null;
+            let detectionMethod = '';
+            let matchedDistrict = '';
+            
+            // Опит за намиране на РУ по район - проверяваме всички възможни имена
+            if (districtInfo.districts && districtInfo.districts.length > 0) {
+                for (const district of districtInfo.districts) {
+                    station = findPoliceStationByDistrict(district);
+                    if (station) {
+                        matchedDistrict = district;
+                        detectionMethod = `Административен район: ${district}`;
+                        break;
+                    }
+                }
+            }
+            
+            // Ако не е намерено по район, използваме най-близкото РУ
+            if (!station) {
+                const result = findNearestPoliceStation(lat, lon);
+                station = result.station;
+                detectionMethod = 'Определено по географска близост (район не е разпознат)';
+                
+                // Добавяме информация за неразпознатите райони в конзолата за debugging
+                if (districtInfo.districts.length > 0) {
+                    console.warn('Неразпознати райони:', districtInfo.districts);
+                }
+            }
+
+            // Изчисляване на разстоянието
+            const distance = calculateDistance(lat, lon, station.lat, station.lon);
+            
             // Форматиране на разстоянието
             let distanceText;
             if (distance < 1) {
@@ -423,6 +560,8 @@
             const resultContent = `
                 <p><strong>Посочена локация:</strong><br>
                 ${lat.toFixed(6)}, ${lon.toFixed(6)}</p>
+                
+                ${detectionMethod ? `<p><em>${detectionMethod}</em></p>` : ''}
                 
                 <p class="station-name">${station.name}</p>
                 
@@ -439,7 +578,6 @@
             `;
 
             document.getElementById('resultContent').innerHTML = resultContent;
-            document.getElementById('resultBox').classList.add('show');
 
             // Добавяне на линия между точката и РУ
             if (window.currentLine) {
