@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Карта на полицейски управления в София</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+        }
+        
+        #header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            color: #bdc3c7;
+        }
+        
+        #map {
+            width: 100%;
+            height: calc(100vh - 180px);
+            cursor: crosshair;
+        }
+        
+        #info {
+            padding: 15px 20px;
+            background-color: #ecf0f1;
+            text-align: center;
+            font-size: 14px;
+            color: #34495e;
+        }
+        
+        .search-container {
+            padding: 15px 20px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        #addressInput {
+            padding: 10px 15px;
+            border: 2px solid #bdc3c7;
+            border-radius: 5px;
+            font-size: 14px;
+            width: 400px;
+            max-width: 100%;
+        }
+        
+        #addressInput:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        #searchBtn {
+            padding: 10px 25px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        #searchBtn:hover {
+            background-color: #2980b9;
+        }
+        
+        .popup-content {
+            padding: 10px;
+            max-width: 300px;
+        }
+        
+        .popup-content h3 {
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-size: 16px;
+        }
+        
+        .popup-content p {
+            margin: 5px 0;
+            color: #555;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        
+        .popup-content .phones {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .popup-content .territory {
+            font-style: italic;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        
+        .leaflet-popup-content-wrapper {
+            border-radius: 8px;
+        }
+        
+        .result-box {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 350px;
+            z-index: 1000;
+            display: none;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .result-box.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .result-box h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        
+        .result-box p {
+            margin: 8px 0;
+            color: #555;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+        
+        .result-box .station-name {
+            color: #3498db;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .result-box .distance {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .result-box .phones {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .result-box .territory {
+            font-style: italic;
+            color: #7f8c8d;
+            font-size: 13px;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+        
+        .close-btn:hover {
+            color: #2c3e50;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            font-weight: bold;
+            padding: 10px;
+            background-color: #fadbd8;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <h1>🚔 Карта на полицейски управления в София</h1>
+        <p class="subtitle">Проверете в района на кое РУ се намирате</p>
+    </div>
+    
+    <div class="search-container">
+        <input type="text" id="addressInput" placeholder="Въведете адрес (напр. бул. Витоша 1, ж.к. Младост...)">
+        <button id="searchBtn" onclick="searchAddress()">🔍 Търси</button>
+    </div>
+    
+    <div id="info">
+        Кликнете на картата или въведете адрес за да видите информация за обслужващото полицейско управление
+    </div>
+    
+    <div id="map"></div>
+    
+    <div id="resultBox" class="result-box">
+        <button class="close-btn" onclick="closeResultBox()">×</button>
+        <h3>Резултат</h3>
+        <div id="resultContent"></div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Полицейски управления в София с пълна информация
+        const policeStations = [
+            {
+                name: "01 РУ - СДВР",
+                lat: 42.7087,
+                lon: 23.3615,
+                address: "гр. София, п. код 1113, ж. к. \"Гео Милев\", бул. \"Шипченски проход\" № 8",
+                phones: "02/982 7166; 02/982 7167",
+                territory: "Обслужваната територия обхваща три административни столични района: Средец, Слатина и Изгрев."
+            },
+            {
+                name: "02 РУ - СДВР",
+                lat: 42.7165,
+                lon: 23.3045,
+                address: "гр. София, п. код 1202, ул. \"Княз Борис І\" № 215",
+                phones: "02/982 0820; 02/831 0107",
+                territory: "Обслужваната територия обхваща три административни столични района: Сердика, Надежда и Нови Искър."
+            },
+            {
+                name: "03 РУ - СДВР",
+                lat: 42.7237,
+                lon: 23.3569,
+                address: "гр. София, п. код 1309, ж. к. \"Илинден\", ул. \"Индже Войвода\" № 2",
+                phones: "02/982 1260; 02/982 1290; 02/822 1875",
+                territory: "Обслужваната територия обхваща три административни столични района: Възраждане, Красна поляна и Илинден."
+            },
+            {
+                name: "04 РУ - СДВР",
+                lat: 42.6784,
+                lon: 23.3358,
+                address: "гр. София, п. код 1421, ж. к. \"Лозенец\", ул. \"Крум Попов\" № 57",
+                phones: "02/982 4160; 02/982 3146; 02/866 2227",
+                territory: "Обслужваната територия обхваща два административни столични района - Триадица и Лозенец."
+            },
+            {
+                name: "05 РУ - СДВР",
+                lat: 42.6977,
+                lon: 23.3344,
+                address: "гр. София, п. код 1504, ул. \"Марин Дринов\" № 4",
+                phones: "02/982 5920; 02/982 5921",
+                territory: "Обслужваната територия обхваща три административни столични района: Оборище, Подуяне и Кремиковци, както и селата Яна, Желява, Долни Богров, Горни Богров и гр. Бухово."
+            },
+            {
+                name: "06 РУ - СДВР",
+                lat: 42.6896,
+                lon: 23.2669,
+                address: "гр. София, п. код 1618, ж. к. \"Красно село\", бул. \"Братя Бъкстон\" № 5",
+                phones: "02/982 1760; 02/982 1761; 02/856 2914",
+                territory: "Обслужваната територия обхваща три административни столични района: Красно село, Овча купел и Витоша, както и селата: Владая, Мърчаево и Мало Бучино."
+            },
+            {
+                name: "07 РУ - СДВР",
+                lat: 42.6561,
+                lon: 23.3753,
+                address: "гр. София, п. код 1700, ж. к. \"Младост\", бул. \"Александър Малинов\" № 1",
+                phones: "02/982 8760; 02/862 6108",
+                territory: "Обслужваната територия обхваща два административни столични района: \"Младост\" и \"Студентски\"."
+            },
+            {
+                name: "08 РУ - СДВР",
+                lat: 42.6645,
+                lon: 23.4015,
+                address: "гр. София, п. код 1592, ж. к. \"Дружба\", ул. \"Иван Арабаджията\" № 141",
+                phones: "02/982 5310; 02/982 7310; 02/979 0786",
+                territory: "Обслужваната територия обхваща кварталите Дружба, Цариградски комплекс, Абдовица, Димитър Миленков и Бусманци, десет села: Панчарево, Кокаляне, Пасарел, Лозен, Герман, Казичане, Кривина, Бистрица, Железница и Плана и 53 вилни зони."
+            },
+            {
+                name: "09 РУ - СДВР",
+                lat: 42.7278,
+                lon: 23.2522,
+                address: "гр. София, п. код 1359, ж. к. \"Люлин ІV\" бл. 464, вх. В",
+                phones: "02/982 5600; 02/982 5601; 02/824 3655",
+                territory: "Обслужваната територия обхваща три административни столични района: Люлин, Връбница и Банкя."
+            }
+        ];
+
+        // Инициализация на картата
+        const map = L.map('map').setView([42.6977, 23.3219], 12);
+
+        // Добавяне на OpenStreetMap слоя
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(map);
+
+        // Икона за полицейско управление
+        const policeIcon = L.icon({
+            iconUrl: 'data:image/svg+xml;utf8,' + encodeURIComponent(`
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32">
+                    <circle cx="12" cy="12" r="10" fill="#3498db" stroke="white" stroke-width="2"/>
+                    <path d="M12 3 L14 8 L19 8 L15 11 L17 16 L12 13 L7 16 L9 11 L5 8 L10 8 Z" fill="white"/>
+                </svg>
+            `),
+            iconSize: [32, 32],
+            iconAnchor: [16, 16],
+            popupAnchor: [0, -16]
+        });
+
+        // Добавяне на маркери за полицейските управления
+        policeStations.forEach(station => {
+            const marker = L.marker([station.lat, station.lon], { icon: policeIcon }).addTo(map);
+            marker.bindPopup(`
+                <div class="popup-content">
+                    <h3>${station.name}</h3>
+                    <p><strong>Адрес:</strong><br>${station.address}</p>
+                    <p class="phones"><strong>Дежурна част:</strong><br>${station.phones}</p>
+                    <p class="territory">${station.territory}</p>
+                </div>
+            `);
+        });
+
+        // Функция за изчисляване на разстояние (Haversine формула)
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Радиус на Земята в километри
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            const distance = R * c;
+            return distance;
+        }
+
+        // Функция за намиране на най-близкото полицейско управление
+        function findNearestPoliceStation(lat, lon) {
+            let nearest = null;
+            let minDistance = Infinity;
+
+            policeStations.forEach(station => {
+                const distance = calculateDistance(lat, lon, station.lat, station.lon);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    nearest = station;
+                }
+            });
+
+            return { station: nearest, distance: minDistance };
+        }
+
+        // Променлива за маркер на кликнатото/търсено място
+        let clickMarker = null;
+
+        // Функция за показване на резултата
+        function showResult(lat, lon, source = 'click') {
+            // Премахване на предишния маркер
+            if (clickMarker) {
+                map.removeLayer(clickMarker);
+            }
+
+            // Добавяне на нов маркер
+            clickMarker = L.marker([lat, lon], {
+                icon: L.icon({
+                    iconUrl: 'data:image/svg+xml;utf8,' + encodeURIComponent(`
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32">
+                            <circle cx="12" cy="12" r="8" fill="#e74c3c" stroke="white" stroke-width="2"/>
+                            <circle cx="12" cy="12" r="3" fill="white"/>
+                        </svg>
+                    `),
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16]
+                })
+            }).addTo(map);
+
+            // Центриране на картата
+            map.setView([lat, lon], 14);
+
+            // Намиране на най-близкото РУ
+            const result = findNearestPoliceStation(lat, lon);
+            const distance = result.distance;
+            const station = result.station;
+
+            // Форматиране на разстоянието
+            let distanceText;
+            if (distance < 1) {
+                distanceText = `${Math.round(distance * 1000)} метра`;
+            } else {
+                distanceText = `${distance.toFixed(2)} километра`;
+            }
+
+            // Показване на резултата
+            const resultContent = `
+                <p><strong>Посочена локация:</strong><br>
+                ${lat.toFixed(6)}, ${lon.toFixed(6)}</p>
+                
+                <p class="station-name">${station.name}</p>
+                
+                <p><strong>Адрес на РУ:</strong><br>
+                ${station.address}</p>
+                
+                <p class="phones"><strong>Дежурна част:</strong><br>
+                ${station.phones}</p>
+                
+                <p class="distance"><strong>Разстояние до РУ:</strong><br>
+                ${distanceText}</p>
+                
+                <p class="territory">${station.territory}</p>
+            `;
+
+            document.getElementById('resultContent').innerHTML = resultContent;
+            document.getElementById('resultBox').classList.add('show');
+
+            // Добавяне на линия между точката и РУ
+            if (window.currentLine) {
+                map.removeLayer(window.currentLine);
+            }
+            window.currentLine = L.polyline([[lat, lon], [station.lat, station.lon]], {
+                color: '#3498db',
+                weight: 2,
+                opacity: 0.7,
+                dashArray: '5, 10'
+            }).addTo(map);
+        }
+
+        // Обработка на кликане на картата
+        map.on('click', function(e) {
+            const lat = e.latlng.lat;
+            const lon = e.latlng.lng;
+            showResult(lat, lon, 'click');
+        });
+
+        // Функция за търсене на адрес
+        async function searchAddress() {
+            const address = document.getElementById('addressInput').value.trim();
+            
+            if (!address) {
+                alert('Моля, въведете адрес');
+                return;
+            }
+
+            // Използване на Nominatim API за геокодиране
+            const query = `${address}, София, България`;
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data && data.length > 0) {
+                    const lat = parseFloat(data[0].lat);
+                    const lon = parseFloat(data[0].lon);
+                    showResult(lat, lon, 'search');
+                } else {
+                    document.getElementById('resultContent').innerHTML = 
+                        '<div class="error-message">Адресът не е намерен. Моля, опитайте с друг адрес или кликнете директно на картата.</div>';
+                    document.getElementById('resultBox').classList.add('show');
+                }
+            } catch (error) {
+                document.getElementById('resultContent').innerHTML = 
+                    '<div class="error-message">Грешка при търсенето. Моля, опитайте отново.</div>';
+                document.getElementById('resultBox').classList.add('show');
+            }
+        }
+
+        // Обработка на Enter в полето за търсене
+        document.getElementById('addressInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchAddress();
+            }
+        });
+
+        function closeResultBox() {
+            document.getElementById('resultBox').classList.remove('show');
+            if (clickMarker) {
+                map.removeLayer(clickMarker);
+                clickMarker = null;
+            }
+            if (window.currentLine) {
+                map.removeLayer(window.currentLine);
+                window.currentLine = null;
+            }
+        }
+    </script>
+</body>
+</html>
