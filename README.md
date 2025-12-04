@@ -4,7 +4,7 @@ An interactive web application that helps residents of Sofia, Bulgaria find thei
 
 ## 🌐 Live Demo
 
-[View the map](https://georgi-i.github.io/sofia-police-map.html)
+[View the map](https://georgi-i.github.io/sofia-police-map/index.html)
 
 ## ✨ Features
 
@@ -34,7 +34,7 @@ This tool helps Sofia residents quickly identify which police station serves the
 
 ## 🚀 Usage
 
-1. Visit the [live application](https://georgi-i.github.io/sofia-police-map.html)
+1. Visit the [live application](https://georgi-i.github.io/sofia-police-map/index.html)
 2. Either:
    - Click directly on the map at your location
    - Enter your address in the search box
