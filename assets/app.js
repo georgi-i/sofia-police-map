@@ -241,8 +241,10 @@
       <div class="list">${g.precincts.map((p) => precinctHTML(p, { match: matched.has(p) })).join('')}</div>`;
   }
 
-  function stationCardHTML(s, { distance, primary = false, label = 'Районно управление' } = {}) {
-    const dir = `https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lon}`;
+  function stationCardHTML(s, { distance, from, primary = false, label = 'Районно управление' } = {}) {
+    // Начална точка = избраното място; иначе Google гадае по IP и може да тръгне от друг град.
+    const origin = from ? `&origin=${from[0].toFixed(6)},${from[1].toFixed(6)}` : '';
+    const dir = `https://www.google.com/maps/dir/?api=1${origin}&destination=${s.lat},${s.lon}`;
     return `
       <div class="card${primary ? ' primary' : ''}">
         <div class="eyebrow">${esc(label)}</div>
@@ -371,7 +373,7 @@
       <button class="back" type="button" data-home>‹ Всички управления</button>
       <div class="place">${esc(title)}</div>
       ${sub ? `<div class="muted small">${esc(sub)}</div>` : ''}
-      ${stationCardHTML(station, { distance: dist, primary: true, label })}
+      ${stationCardHTML(station, { distance: dist, from: here, primary: true, label })}
       ${precinctBlock}
     `, `${lat.toFixed(5)},${lon.toFixed(5)}`);
   }
