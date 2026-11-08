@@ -6,7 +6,6 @@
   const SOFIA_CENTER = [42.6977, 23.3219];
   const SOFIA_VIEWBOX = '22.95,42.88,23.70,42.50';
   const NOMINATIM = 'https://nominatim.openstreetmap.org';
-  const OVERPASS = 'https://overpass-api.de/api/interpreter';
 
   const $ = (sel) => document.querySelector(sel);
   const panel = $('#panel');
@@ -100,13 +99,52 @@
     markers.forEach((m, key) => m.getElement()?.firstElementChild?.classList.toggle('active', key === id));
   }
 
+  /* ---------------- Districts (предварително изтеглени контури) ---------------- */
+
+  const cssVar = (name, fallback) => getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+  const districtStyle = (active) => (active
+    ? { color: cssVar('--accent', '#007aff'), weight: 2.5, opacity: 0.9, fill: true, fillOpacity: 0.07 }
+    : { color: cssVar('--text-3', '#86868b'), weight: 1, opacity: 0.35, fill: false });
+
+  const districts = (window.SOFIA_DISTRICTS || []).map((d) => ({
+    name: d.name,
+    rings: d.rings,
+    layer: L.polygon(d.rings, { ...districtStyle(false), interactive: false }).addTo(map),
+  }));
+
+  /** Точка в многоъгълник (even-odd по всички пръстени, вкл. дупките). */
+  function inRings(lat, lon, rings) {
+    let inside = false;
+    for (const ring of rings) {
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        const [yi, xi] = ring[i];
+        const [yj, xj] = ring[j];
+        if ((yi > lat) !== (yj > lat) && lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) inside = !inside;
+      }
+    }
+    return inside;
+  }
+  const districtAt = (lat, lon) => districts.find((d) => inRings(lat, lon, d.rings))?.name || null;
+
+  function highlightDistricts(names = []) {
+    const set = new Set(names.map(norm));
+    districts.forEach((d) => {
+      const active = set.has(norm(d.name));
+      d.layer.setStyle(districtStyle(active));
+      if (active) d.layer.bringToFront();
+    });
+  }
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => highlightDistricts(activeDistricts));
+  let activeDistricts = [];
+  const setActiveDistricts = (names) => { activeDistricts = names; highlightDistricts(names); };
+
   let pin = null;
   let link = null;
-  let shape = null;
   function clearOverlays() {
-    [pin, link, shape].forEach((l) => l && map.removeLayer(l));
-    pin = link = shape = null;
+    [pin, link].forEach((l) => l && map.removeLayer(l));
+    pin = link = null;
     highlightStation(null);
+    setActiveDistricts([]);
   }
 
   /* ---------------- Geodata services ---------------- */
@@ -122,47 +160,6 @@
     });
     const res = await getJSON(`${NOMINATIM}/search?${params}`);
     return res[0] || null;
-  }
-
-  /** Административен район + контур от Overpass (admin_level=6). */
-  async function districtShape(lat, lon) {
-    const query = `[out:json][timeout:20];is_in(${lat},${lon})->.a;rel(pivot.a)["boundary"="administrative"]["admin_level"="6"];out geom;`;
-    const data = await getJSON(OVERPASS, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: 'data=' + encodeURIComponent(query),
-    });
-    const rel = data.elements?.[0];
-    if (!rel) return null;
-    const t = rel.tags || {};
-    return { district: t['name:bg'] || t.name, rings: assembleRings(rel.members || []) };
-  }
-
-  function assembleRings(members) {
-    const same = (a, b) => a[0] === b[0] && a[1] === b[1];
-    const ways = members
-      .filter((m) => m.type === 'way' && m.role !== 'inner' && m.geometry)
-      .map((m) => m.geometry.map((p) => [p.lat, p.lon]));
-    const rings = [];
-    while (ways.length) {
-      let ring = ways.shift();
-      let grew = true;
-      while (grew && !same(ring[0], ring[ring.length - 1])) {
-        grew = false;
-        const end = ring[ring.length - 1];
-        for (let i = 0; i < ways.length; i++) {
-          const w = ways[i];
-          if (same(w[0], end)) ring = ring.concat(w.slice(1));
-          else if (same(w[w.length - 1], end)) ring = ring.concat(w.slice(0, -1).reverse());
-          else continue;
-          ways.splice(i, 1);
-          grew = true;
-          break;
-        }
-      }
-      rings.push(ring);
-    }
-    return rings;
   }
 
   /** Намира района от адреса на Nominatim. */
@@ -292,21 +289,13 @@
     if (!s) return showHome();
     clearOverlays();
     highlightStation(id);
+    setActiveDistricts(s.districts);
     setView(`
       <button class="back" type="button" data-home>‹ Всички управления</button>
       ${stationCardHTML(s, { primary: true })}
       ${groupsForStation(id).map((g) => groupHTML(g)).join('')}
     `, `ru-${id}`);
     focus([s.lat, s.lon], 13);
-  }
-
-  function showLoading(lat, lon) {
-    setView(`
-      <button class="back" type="button" data-home>‹ Всички управления</button>
-      <div class="place">Посочена точка</div>
-      <div class="muted small">${lat.toFixed(5)}, ${lon.toFixed(5)}</div>
-      <div class="card"><div class="skeleton" style="width:40%"></div><div class="skeleton"></div><div class="skeleton" style="width:70%"></div></div>
-    `, `${lat.toFixed(5)},${lon.toFixed(5)}`);
   }
 
   /* ---------------- Main flow ---------------- */
@@ -320,35 +309,31 @@
       icon: L.divIcon({ className: '', html: '<div class="pin"></div>', iconSize: [22, 22], iconAnchor: [11, 11] }),
       interactive: false,
     }).addTo(map);
-    showLoading(lat, lon);
-    focus([lat, lon], 14);
 
-    const shapePromise = districtShape(lat, lon).catch(() => null);
+    // Районът и РУ се определят веднага, локално; улицата (за участъка) идва после от Nominatim.
+    let district = districtAt(lat, lon);
     let place = known;
-    if (!place?.address) place = await reverseGeocode(lat, lon).catch(() => null);
+    const pending = !place?.address;
+    renderResult(lat, lon, place, district, pending);
+    focus([lat, lon], 14);
+    if (!pending) return;
+
+    place = await reverseGeocode(lat, lon).catch(() => null);
     if (id !== requestId) return;
-
-    let district = districtFromAddress(place?.address);
-    if (!district) {
-      // Overpass понякога отговаря бавно – чакаме най-много 8 s, после ползваме най-близкото РУ.
-      const s = await Promise.race([shapePromise, new Promise((r) => setTimeout(r, 8000, null))]);
-      if (id !== requestId) return;
-      if (s?.district && districtIndex.has(norm(s.district))) district = s.district.replace(/^район\s+/i, '');
-    }
-
-    shapePromise.then((s) => {
-      if (id !== requestId || !s?.rings.length) return;
-      shape = L.polygon(s.rings, {
-        color: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#007aff',
-        weight: 2, opacity: 0.8, fillOpacity: 0.06, interactive: false,
-      }).addTo(map);
+    district = district || districtFromAddress(place?.address);
+    const open = [...content.querySelectorAll('details[open] .p-names')].map((n) => n.textContent);
+    const scroll = content.scrollTop;
+    renderResult(lat, lon, place, district, false);
+    content.scrollTop = scroll;
+    content.querySelectorAll('details .p-names').forEach((n) => {
+      if (open.includes(n.textContent)) n.closest('details').open = true;
     });
-
-    renderResult(lat, lon, place, district);
   }
 
-  function renderResult(lat, lon, place, district) {
+  function renderResult(lat, lon, place, district, pending = false) {
     const here = [lat, lon];
+    if (link) map.removeLayer(link);
+    setActiveDistricts(district ? [district] : []);
     let station = district ? districtIndex.get(norm(district)) : null;
     let label = 'Районно управление';
     if (!station) {
@@ -363,7 +348,8 @@
 
     const a = place?.address || {};
     const title = a.road ? `${a.road}${a.house_number ? ' ' + a.house_number : ''}` : (place?.name || 'Посочена точка');
-    const sub = [a.neighbourhood || a.suburb || a.quarter || a.village || a.town, district && `район ${district}`]
+    const skeleton = '<div class="skeleton" style="width:60%"></div>';
+    const sub = pending ? `район ${district || '…'}` : [a.neighbourhood || a.suburb || a.quarter || a.village || a.town, district && `район ${district}`]
       .filter(Boolean).join(' · ');
 
     const candidateGroups = district ? groupsForDistrict(district) : [];
@@ -374,7 +360,7 @@
     if (candidateGroups.length) {
       precinctBlock = `
         <div class="section-title">Участъков инспектор${matches.length ? '<span class="tag">вероятно</span>' : ''}</div>
-        ${matches.length
+        ${pending ? `<div class="card">${skeleton}${skeleton}</div>` : matches.length
           ? `<div class="list">${matches.map((m) => precinctHTML(m.p, { open: matches.length === 1, match: true })).join('')}</div>
              <p class="muted small" style="margin-top:8px">Определено ориентировъчно по улица и квартал. Проверете границите в описанието.</p>`
           : '<p class="muted small">Не успяхме да определим точния участък автоматично. Изберете от списъка по-долу.</p>'}
