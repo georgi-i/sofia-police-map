@@ -8,13 +8,12 @@ An interactive web application that helps residents of Sofia, Bulgaria find thei
 
 ## ✨ Features
 
-- **Interactive Map**: Click anywhere on the map to find the police station serving that area
-- **Address Search**: Enter an address to locate the corresponding police station
-- **Police Station Information**: View details about each police station including:
-  - Station name and location
-  - Contact information
-  - Service area boundaries
-- **User-Friendly Interface**: Clean, intuitive design in Bulgarian for local users
+- **Interactive map** – tap anywhere to see which police station (РУ) serves that place; the administrative district is outlined on the map
+- **Address search** and **“my location”**
+- **Precinct inspectors** – all 153 precincts from the 25 “Териториална полиция” groups of the 9 Sofia police stations: inspectors, boundaries, reception address, phone and hours
+- **Probable precinct** – picked automatically from the street / neighbourhood name (approximate, always check the boundaries)
+- **Shareable links** – `#42.66852,23.36157` opens a location, `#ru-07` opens a station
+- Minimal, Apple-style UI with automatic dark mode and a bottom sheet on phones
 
 ## 🎯 Purpose
 
@@ -26,11 +25,20 @@ This tool helps Sofia residents quickly identify which police station serves the
 
 ## 🛠️ Technologies Used
 
-- HTML5
-- CSS3
-- JavaScript
-- Interactive mapping library (Leaflet/Google Maps/Mapbox)
-- Geocoding API for address lookup
+- Plain HTML / CSS / JavaScript – no build step
+- [Leaflet](https://leafletjs.com) with OpenStreetMap tiles
+- [Nominatim](https://nominatim.org) for geocoding, [Overpass API](https://overpass-api.de) for district boundaries
+
+## 📁 Structure
+
+```
+index.html            page shell
+assets/styles.css     UI styles (light + dark)
+assets/app.js         map, search and matching logic
+data/police-data.js   stations + precincts (generated from the СДВР PDF lists on mvr.bg)
+```
+
+Data source: [СДВР – структура](https://www.mvr.bg/sdvr/дирекцията/за-одмвр/структура), lists for 2026 (fetched 8 Nov 2026).
 
 ## 🚀 Usage
 

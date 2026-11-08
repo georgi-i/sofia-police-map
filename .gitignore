@@ -1,0 +1,34 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Editors / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node / tooling (ако се добави build стъпка)
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.cache/
+dist/
+
+# Python (скриптове за обновяване на данните)
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Временни и сурови файлове
+*.log
+tmp/
+.env
+.env.*
+
+# Claude Code local config
+.claude/
